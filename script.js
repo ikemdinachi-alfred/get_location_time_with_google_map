@@ -50,8 +50,25 @@ function initializeMap() {
         const distanceValue = result.routes[0].legs[0].distance.value; // Distance in meters
         const distanceInMiles = distanceValue / 1609.34; // Convert to miles
 
-        // Calculate the price based on $1.25 per mile
-        const price = (distanceInMiles * 1.25).toFixed(2); // Price rounded to 2 decimal places
+        // Determine price based on distance range
+        let rate;
+        if (distanceInMiles <= 500) {
+          rate = 0.90;
+        } else if (distanceInMiles <= 1000) {
+          rate = 0.83;
+        } else if (distanceInMiles <= 1500) {
+          rate = 0.80;
+        } else if (distanceInMiles <= 2000) {
+          rate = 0.58;
+        } else if (distanceInMiles <= 2500) {
+          rate = 0.47;
+        } else if (distanceInMiles <= 3000) {
+          rate = 0.45;
+        } else {
+          rate = 0.43;
+        }
+
+        const price = (distanceInMiles * rate).toFixed(2); // Price rounded to 2 decimal places
 
         // Display distance, duration, and price
         output.innerHTML = `
@@ -60,9 +77,7 @@ function initializeMap() {
             <strong>To:</strong> ${destination} <br>
             Driving Distance: <i class="fas fa-road"></i> ${result.routes[0].legs[0].distance.text} <br>
             Duration: <i class="fas fa-hourglass-start"></i> ${result.routes[0].legs[0].duration.text} <br>
-            @ $ 1.25 per mile <br>
             Price: <i class="fas fa-dollar-sign"></i> $${price}
-            
           </div>`;
 
         // Set the directions on the map
