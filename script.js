@@ -1,137 +1,108 @@
-API_KEY ="AIzaSyCUh_cxArNdSRXpma762LaH4Uh94Jhw9Uk"
+const apiKey = 'AIzaSyBMXc0n4AYyHwYKAduPDWSeat3kJD4QZF8'; // Replace with a valid API key
+const script = document.createElement('script');
+script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+script.onload = initializeMap;
+script.onerror = () => console.error('Failed to load Google Maps script.');
+document.head.appendChild(script);
 
-// Set Map Options
-const myLatLng = { lat: 38.3460, lng: -0.4907 };
-const mapOptions = {
-  center: myLatLng,
-  zoom: 7,
-  mapTypeId: google.maps.MapTypeId.ROADMAP,
-};
+// Map initialization function
+function initializeMap() {
+  const myLatLng = { lat: 43.0000, lng: -75.0000 };
 
-// Create map
-const map = new google.maps.Map(document.getElementById("googleMap"), mapOptions);
-
-// Create Direction Service object
-const directionService = new google.maps.DirectionsService();
-const directionsDisplay = new google.maps.DirectionsRenderer();
-
-// Bind the directionRenderer to the map
-directionsDisplay.setMap(map);
-
-// Function to calculate route
-function calcRoute() {
-  const request = {
-    origin: document.getElementById("from").value,
-    destination: document.getElementById("to").value,
-    travelMode: google.maps.TravelMode.DRIVING,
-    unitSystem: google.maps.UnitSystem.IMPERIAL,
+  // Map options
+  const mapOptions = {
+    center: myLatLng,
+    zoom: 7,
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
   };
 
-  directionService.route(request, (result, status) => {
-    const output = document.getElementById("output");
+  // Create map instance
+  const map = new google.maps.Map(document.getElementById('googleMap'), mapOptions);
 
-    if (status === google.maps.DirectionsStatus.OK) {
-      // Display distance and time
-      output.innerHTML = `
-        <div class="alert-info">
-          <strong>From:</strong> ${document.getElementById("from").value} <br>
-          <strong>To:</strong> ${document.getElementById("to").value} <br>
-          Driving Distance: <i class="fas fa-road"></i> ${result.routes[0].legs[0].distance.text} <br>
-          Duration: <i class="fas fa-hourglass-start"></i> ${result.routes[0].legs[0].duration.text}
-        </div>`;
-      directionsDisplay.setDirections(result);
-    } else {
-      directionsDisplay.setDirections({ routes: [] });
-      map.setCenter(myLatLng);
-      output.innerHTML = `
-        <div class="alert-danger">
-          <i class="fas fa-exclamation-triangle"></i> Could not retrieve distance.
-        </div>`;
+  // Direction service and renderer
+  const directionService = new google.maps.DirectionsService();
+  const directionsDisplay = new google.maps.DirectionsRenderer();
+  directionsDisplay.setMap(map);
+
+  // Calculate route function
+  function calcRoute() {
+    const origin = document.getElementById('from').value;
+    const destination = document.getElementById('to').value;
+
+    if (!origin || !destination) {
+      displayMessage('Please enter both origin and destination.', 'alert-warning');
+      return;
     }
-  });
+
+    const request = {
+      origin: origin,
+      destination: destination,
+      travelMode: google.maps.TravelMode.DRIVING,
+      unitSystem: google.maps.UnitSystem.IMPERIAL,
+    };
+
+    // Make the route request
+    directionService.route(request, (result, status) => {
+      const output = document.getElementById('output');
+
+      if (status === google.maps.DirectionsStatus.OK) {
+        // Get the distance in meters and convert to miles
+        const distanceValue = result.routes[0].legs[0].distance.value; // Distance in meters
+        const distanceInMiles = distanceValue / 1609.34; // Convert to miles
+
+        // Calculate the price based on $1.25 per mile
+        const price = (distanceInMiles * 1.25).toFixed(2); // Price rounded to 2 decimal places
+
+        // Display distance, duration, and price
+        output.innerHTML = `
+          <div class="alert-info">
+            <strong>From:</strong> ${origin} <br>
+            <strong>To:</strong> ${destination} <br>
+            Driving Distance: <i class="fas fa-road"></i> ${result.routes[0].legs[0].distance.text} <br>
+            Duration: <i class="fas fa-hourglass-start"></i> ${result.routes[0].legs[0].duration.text} <br>
+            @ $ 1.25 per mile <br>
+            Price: <i class="fas fa-dollar-sign"></i> $${price}
+            
+          </div>`;
+
+        // Set the directions on the map
+        directionsDisplay.setDirections(result);
+      } else {
+        // Reset map and show error
+        directionsDisplay.setDirections({ routes: [] });
+        map.setCenter(myLatLng);
+        displayMessage('Could not retrieve distance. Please try again.', 'alert-danger');
+      }
+    });
+  }
+
+  // Attach calcRoute to button click
+  const calculateButton = document.querySelector('button');
+  if (calculateButton) {
+    calculateButton.addEventListener('click', calcRoute);
+  } else {
+    console.warn('Calculate button not found in the DOM.');
+  }
+
+  // Autocomplete for input fields
+  const autocompleteOptions = { types: ['(cities)'] };
+  const fromInput = document.getElementById('from');
+  const toInput = document.getElementById('to');
+
+  if (fromInput && toInput) {
+    new google.maps.places.Autocomplete(fromInput, autocompleteOptions);
+    new google.maps.places.Autocomplete(toInput, autocompleteOptions);
+  } else {
+    console.warn('Input fields for origin and destination not found in the DOM.');
+  }
 }
 
-// Create autocomplete objects for inputs
-const options = { types: ["(cities)"] };
-const input1 = document.getElementById("from");
-const autocomplete1 = new google.maps.places.Autocomplete(input1, options);
-
-const input2 = document.getElementById("to");
-const autocomplete2 = new google.maps.places.Autocomplete(input2, options);
-
-// // Set Map Options
-
-// var myLatLng ={lat: 38.3460, lng: -0.4907}
-// var mapOptions ={
-//   center: myLatLng,
-//   zoom: 7,
-//   mapTypeId: google.maps.MapTypeId.ROADMAP
-// }
-
-
-
-// // create map
-
-// var map = new google.maps.Map(document.getElementById("googleMap"),mapOptions)
-
-// // Create a Direction Service object to use the route method and get result
-
-// var directionService = new google.maps.DirectionService();
-
-// // create direction renderer object which will be used to display the route
-
-// var directionsDisplay = new google.maps.DirectionRenderer();
-
-// //bind the directionRenderer to the map
-
-// directionsDisplay.setMap(map)
-
-
-// function calcRoute(){
-// // Create route
-// var request = {
-//   origin: document.getElementById("from").value,
-//   destination: document.getElementById("to").value,
-//   travelMode: google.maps.TravelMode.DRIVING, // WALKING, TRANSIT
-//   unitSystem: google.maps.UnitsSystem.IMPERIAL
-// }
-// // pas the request to the route method
-// directionService.route(request, (result, status)=>{
-// if(status==google.maps.DirectionStatus.OK){
-//   // get distance and time
-//   const output = document.querySelector('#output');
-//   output.innerHTML = "<div class="alert-info"> "+ document.getElementById("from").value + " <br />To: " +
-//    document.getElementById("to").value + ". <br />  Driving distance  '<i class=fas fa-road'> </i>: " +
-//    result.routes[0].legs[0].distance.text + ".<br />Duration <i class='fas fa-hourglass-start'></i> : "+ result.routes[0].legs[0].duration.text + ". </div> "
-
-//    // display route
-//   directionsDisplay.setDirections(result);
-// } else{
-//   directionsDisplay.setDirections({routes: []})
-// }
-// // center map in spain
-
-// map.setCenter(myLatLng);
-
-// //  show error message:
-// output.innerHTML = "<div class='alert-danger'> <i class='fas fa-exclamation-triangle'> </i> could not retrieve distance . </div>";
-// });
-// }
-
-
-
-
-
-
-// // create autocomplete object for all input
-
-// var Options = {
-//   types: ['(cities)']
-// }
-// var input1 = document.getElementById("from")
-// var autocomplete1 = new google.maps.places.Autocomplete(input1,Options)
-
-// var input2 = document.getElementById("to")
-// var autocomplete2 = new google.maps.places.Autocomplete(input2,Options)
-
-
+// Utility function to display messages
+function displayMessage(message, alertClass) {
+  const output = document.getElementById('output');
+  if (output) {
+    output.innerHTML = `<div class="${alertClass}">${message}</div>`;
+  } else {
+    console.warn('Output container not found in the DOM.');
+  }
+}

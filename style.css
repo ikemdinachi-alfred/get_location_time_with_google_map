@@ -21,8 +21,10 @@ body{
 .jumbotron h1{
      text-align: center;
 }
+
 #googleMap{
      width: 70%;
      height: 600px;
      margin: 20px auto;
+     
 }
